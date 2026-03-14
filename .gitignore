@@ -1,0 +1,9 @@
+# datasets
+data/
+
+# models
+models/
+
+# python
+__pycache__/
+*.pyc
