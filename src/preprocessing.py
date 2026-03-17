@@ -19,14 +19,17 @@ output_path = '../data/processed/'
 ## dropping duplicates
 games_df = games_df.drop_duplicates()
 users_df = users_df.drop_duplicates()
-recommmendations_df = recommendations_df.drop_duplicates()
+recommendations_df = recommendations_df.drop_duplicates()
 
+## Replace missing/wrong date with a sentinel value
+games_df['date_release'] = pd.to_datetime(games_df['date_release'], format='%Y-%m-%d', errors='coerce')
+games_df["date_release"] = games_df["date_release"].fillna(pd.Timestamp("1900-01-01"))
 
 
 ## win, mac, linux, steam_deck missing or not boolean
 cols = ["win", "mac", "linux", "steam_deck"]
-games_df[cols] = games_df[cols].fillna('false')
-games_df[cols] = games_df[cols].where(games_df[cols].isin(['true', 'false']), 'false')
+games_df[cols] = games_df[cols].fillna(False)
+games_df[cols] = games_df[cols].where(games_df[cols].isin([True, False]), False)
 
 ## Notify if popular game contiains missing fields
 
@@ -36,7 +39,10 @@ problem_rows.to_csv(OUTPUT_FOLDER / "missing_high_review_entries.log", index=Fal
 
 ## Deleting entries with missing fields
 
-games_df.dropna(axis=1)
+print(games_df.isna().sum())
+print()
+if input("Drop values? [y/N]") == 'y':
+    games_df = games_df.dropna()
 
 ## Transform Steam rating into a number
 
@@ -53,10 +59,28 @@ rating_map = {
 
 games_df["rating_score"] = games_df["rating"].map(rating_map)
 
-# Deleting entries containing missing values for the other files
-users_df.dropna(axis=1)
-recommendations_df.dropna(axis=1)
+## Deleting entries containing missing values for the other files
 
+print(users_df.isna().sum())
+print()
+if input("Drop values? [y/N]") == 'y':
+    users_df = users_df.dropna()
+print(recommendations_df.isna().sum())
+print()
+if (input("Drop values? [y/N]") == 'y'):
+    recommendations_df = recommendations_df.dropna()
+
+## remove games with less than 100 reviews
+games_df= games_df[games_df['user_reviews'] >= 100]
+
+## remove users with less than 5 products
+users_df = users_df[users_df['products'] >= 5]
+
+## remove from recommendations all entries that contain a gameid / userid not present in the other files
+recommendations_df = recommendations_df.merge(users_df[['user_id']], on='user_id')
+recommendations_df = recommendations_df.merge(games_df[['app_id']], on='app_id')
+
+## export
 users_df.to_csv(OUTPUT_FOLDER / 'users_dummy.csv')
 games_df.to_csv(OUTPUT_FOLDER / 'games_dummy.csv')
-recommmendations_df.to_csv(OUTPUT_FOLDER / 'recommendations_dummy.csv')
+recommendations_df.to_csv(OUTPUT_FOLDER / 'recommendations_dummy.csv')
