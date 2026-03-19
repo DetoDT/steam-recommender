@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import time
 from pathlib import Path
 
@@ -60,14 +59,13 @@ try:
     ## Transform Steam rating into a number
 
     rating_map = {
-        "Very Negative": 0,
-        "Negative": 1,
+        "Overwhelmingly Negative": 0,
+        "Very Negative": 1,
         "Mostly Negative": 2,
         "Mixed": 3,
         "Mostly Positive": 4,
-        "Positive": 5,
-        "Very Positive": 6,
-        "Overwhelmingly Positive": 7
+        "Very Positive": 5,
+        "Overwhelmingly Positive": 6
     }
 
     games_df["rating_score"] = games_df["rating"].map(rating_map)
@@ -98,16 +96,16 @@ try:
 
     ## export
     print("> Exporting final files...")
-    users_df.to_csv(OUTPUT_FOLDER / 'users.csv')
-    games_df.to_csv(OUTPUT_FOLDER / 'games.csv')
-    recommendations_df.to_csv(OUTPUT_FOLDER / 'recommendations.csv')
+    users_df.to_csv(OUTPUT_FOLDER / 'users.csv', index=False)
+    games_df.to_csv(OUTPUT_FOLDER / 'games.csv', index=False)
+    recommendations_df.to_csv(OUTPUT_FOLDER / 'recommendations.csv', index=False)
 
     if (len(problem_rows) > 1):
         problem_rows.to_csv(OUTPUT_FOLDER / "missing_high_review_entries.log", index=False)
 
     end_time = time.time()
 
-    print("\n DONE! All the processed csv have been saved under data/processed")
+    print("\nDONE! All the processed csv have been saved under data/processed")
     print(f'Total time: {int(end_time-start_time)} seconds.')
     
 except Exception as err:
