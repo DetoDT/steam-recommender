@@ -105,7 +105,7 @@ try:
 
     end_time = time.time()
 
-    print("\nDONE! All the processed csv have been saved under data/processed")
+    print("\nDONE! All the processed files have been saved under data/processed")
     print(f'Total time: {int(end_time-start_time)} seconds.')
     
 except Exception as err:
