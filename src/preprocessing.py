@@ -6,6 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_DATA_FOLDER = PROJECT_ROOT / "data" / "raw" 
 OUTPUT_FOLDER = PROJECT_ROOT / "data" / "processed"
 
+print("DATA PREPROCESSING\n")
 
 if any(OUTPUT_FOLDER.iterdir()):
     print("Make sure output directory (data/processed) is empty before proceding.")
@@ -13,24 +14,35 @@ if any(OUTPUT_FOLDER.iterdir()):
 
 
 try:
+
+    init = input("Start processing the data?[Y/n]")
+
+    if not (init.lower() == 'y' or init == ''):
+        exit()
+
+
+
     start_time = time.time()
-    print("DATA PREPROCESSING\n")
-
-
     print("> Loading dataset...")
     users_df = pd.read_csv(RAW_DATA_FOLDER / "users.csv")
     games_df = pd.read_csv(RAW_DATA_FOLDER / "games.csv")
     recommendations_df = pd.read_csv(RAW_DATA_FOLDER / "recommendations.csv")
+    # games_more_df = pd.read_csv(RAW_DATA_FOLDER / "games_more_attr.csv")
 
     ###
     # DATA CLEANING
     ###
+
+    # games_more_df = games_more_df[['AppID', 'Metacritic score', 'User score', 'Average playtime forever', 'Median playtime forever', 'Developers', 'Publishers', 'Categories', 'Genres']]
+    # games_more_df = games_more_df.dropna()
+    # games_more_df['AppID'] = pd.to_numeric(games_more_df['AppID'], errors='coerce').astype('int64')
 
     ## dropping duplicates
     print("> Dropping duplicates...")
     games_df = games_df.drop_duplicates()
     users_df = users_df.drop_duplicates()
     recommendations_df = recommendations_df.drop_duplicates()
+    # games_more_df = games_more_df.drop_duplicates()
 
     ## Replace missing/wrong date with a sentinel value
     print("> Fixing fields...")
@@ -84,11 +96,20 @@ try:
     users_df = users_df.dropna()
     recommendations_df = recommendations_df.dropna()
 
+    rating_map = {
+        'True': 1,
+        'False': 0
+    }
+    games_df["is_recommended"] = games_df['is_recommended'].map(rating_map)
+
     ## remove games with less than 100 reviews
     games_df= games_df[games_df['user_reviews'] >= 100]
 
     ## remove users with less than 5 products
     users_df = users_df[users_df['products'] >= 5]
+
+    ## merge games
+    # games_df = games_df.merge(games_more_df, left_on='app_id', right_on='AppID')
 
     ## remove from recommendations all entries that contain a gameid / userid not present in the other files
     recommendations_df = recommendations_df.merge(users_df[['user_id']], on='user_id')
